@@ -1,0 +1,146 @@
+from flask import Flask, render_template, session, redirect, url_for, flash,  send_from_directory
+from flask_bootstrap import Bootstrap
+from flask_moment import Moment
+from flask_wtf import FlaskForm
+from wtforms import StringField, SubmitField, IntegerField, BooleanField, FloatField
+from wtforms.validators import DataRequired, NumberRange, Email
+from flask_script import Manager
+from utils import get_configuration, save_configuration, create_files, load_files
+
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'hard to guess string'
+manager = Manager(app)
+
+bootstrap = Bootstrap(app)
+moment = Moment(app)
+
+
+class NameForm(FlaskForm):
+    name = StringField('Give a name to a new setup or load your setup', validators=[DataRequired()])
+    submit = SubmitField('Create/Load')
+
+class TrainingForm(FlaskForm):
+    jobName = StringField('Job Name', validators=[DataRequired()])
+    user = StringField('User Name', validators=[DataRequired()])
+    numberOfNodes = StringField('Number of Nodes', validators=[DataRequired()])
+    wallTime = StringField('Wall time (format HH:MM)', validators=[DataRequired()])
+    memory = StringField('Max Memory in mb', validators=[DataRequired()])
+    email = StringField('Feedback email', validators=[DataRequired(), Email()])
+    inputDir = StringField('Input directory (contains training/validation directories)', validators=[DataRequired()])
+    modelDir = StringField('Output directory (model is stored)', validators=[DataRequired()])
+    modelName = StringField('Name of the model', validators=[DataRequired()])
+    extension = StringField('Extension of the input and target images (e.g. tiff)', validators=[DataRequired()])
+    patchSizeH = IntegerField('Patch Height (px)', validators=[DataRequired()])
+    patchSizeW = IntegerField('Patch Width (px)', validators=[DataRequired()])
+    multichannel = BooleanField('2D multichannel image (rgb)', validators=[DataRequired()])
+    twoDim = BooleanField('2D image', validators=[DataRequired()])
+    valFraction = FloatField('Validation fraction', validators=[DataRequired(), NumberRange(min=0.1, max=0.5)])
+    submit = SubmitField('Create files')
+
+class PredictionForm(FlaskForm):
+    jobName = StringField('Job Name', validators=[DataRequired()])
+    user = StringField('User Name', validators=[DataRequired()])
+    numberOfNodes = StringField('Number of Nodes', validators=[DataRequired()])
+    wallTime = StringField('Wall time (format HH:MM)', validators=[DataRequired()])
+    memory = StringField('Max Memory in mb', validators=[DataRequired()])
+    email = StringField('Feedback email', validators=[DataRequired(), Email()])
+    inputDir = StringField('Input directory (contains tiff images)', validators=[DataRequired()])
+    outputDir = StringField('Output directory (predicted labeled images are generated)', validators=[DataRequired()])
+    modelDir = StringField('Model directory', validators=[DataRequired()])
+    modelName = StringField('Name of the model', validators=[DataRequired()])
+    extension = StringField('Extension of the images', validators=[DataRequired()])
+    twoDim = BooleanField('2D image')
+    submit = SubmitField('Create files')
+
+
+
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
+
+
+@app.errorhandler(500)
+def internal_server_error(e):
+    return render_template('500.html'), 500
+
+
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    form = NameForm()
+    if form.validate_on_submit():
+        if session.get('name') is None:
+            form.name.data = 'default'
+        session['name'] = form.name.data
+        return redirect(url_for('index'))
+    return render_template('index.html', form=form, name=session.get('name'))
+
+@app.route('/training', methods=['GET', 'POST'])
+def training():
+    form = TrainingForm()
+    config = get_configuration(session.get('name'))
+    if form.validate_on_submit():
+        config['general']['jobName'] = form.jobName.data
+        config['general']['user'] = form.user.data
+        config['general']['numberOfNodes'] = form.numberOfNodes.data
+        config['general']['wallTime'] = form.wallTime.data
+        config['general']['memory'] = form.memory.data
+        config['general']['email'] = form.email.data
+        config['training']['inputDir'] = form.inputDir.data
+        config['general']['modelDir'] = form.modelDir.data
+        config['training']['modelName'] = form.modelName.data
+        save_configuration(session.get('name'), config)
+        create_files(config, destination='training')
+        load_files(config, destination='training')
+        return redirect(url_for('training'))
+    else:
+        form.jobName.default = config['general']['jobName']
+        form.user.default = config['general']['user']
+        form.numberOfNodes.default = config['general']['numberOfNodes']
+        form.wallTime.default = config['general']['wallTime']
+        form.memory.default = config['general']['memory']
+        form.email.default = config['general']['email']
+        form.inputDir.default = config['training']['inputDir']
+        form.modelDir.default = config['general']['modelDir']
+        form.modelName.default = config['training']['modelName']
+        form.process()
+    return render_template('training.html', form=form, name=session.get('name'))
+
+@app.route('/prediction', methods=['GET', 'POST'])
+def prediction():
+    form = PredictionForm()
+    config = get_configuration(session.get('name'))
+
+    if form.validate_on_submit():
+        config['general']['jobName'] = form.jobName.data
+        config['general']['user'] = form.user.data
+        config['general']['numberOfNodes'] = form.numberOfNodes.data
+        config['general']['wallTime'] = form.wallTime.data
+        config['general']['memory'] = form.memory.data
+        config['general']['email'] = form.email.data
+        config['prediction']['inputDir'] = form.inputDir.data
+        config['prediction']['outputDir'] = form.outputDir.data
+        config['general']['modelDir'] = form.modelDir.data
+        config['prediction']['modelName'] = form.modelName.data
+        save_configuration(session.get('name'), config)
+        create_files(config, destination='prediction')
+        load_files(config, destination='prediction')
+        return redirect(url_for('prediction'))
+    else:
+        form.jobName.default = config['general']['jobName']
+        form.user.default = config['general']['user']
+        form.numberOfNodes.default = config['general']['numberOfNodes']
+        form.wallTime.default = config['general']['wallTime']
+        form.memory.default = config['general']['memory']
+        form.email.default = config['general']['email']
+        form.inputDir.default = config['prediction']['inputDir']
+        form.outputDir.default = config['prediction']['outputDir']
+        form.modelDir.default = config['general']['modelDir']
+        form.modelName.default = config['prediction']['modelName']
+        form.process()
+    return render_template('prediction.html', form=form, name=session.get('name'))
+
+
+# ...
+if __name__ == '__main__':
+    manager.run()

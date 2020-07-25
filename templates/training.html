@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}Stardist Cluster{% endblock %}
+
+{% block page_content %}
+<div class="page-header">
+    <h1>Setup of the training scripts for the cluster.</h1>
+    <h2>{% if name %}The current loaded setup is '{{ name }}' {% else %}Currently, there is not setup loaded. Default values are used.{% endif %}!</h2>
+</div>
+{{ wtf.quick_form(form) }}
+{% endblock %}
