@@ -1,4 +1,52 @@
-def moab_template(jobName, numberOfNodes, wallTime, memory, email, destination, inputDir, modelName, user, modelDir, outputDir='Null'):
+def moab_template(jobName=None,
+                  numberOfNodes=None,
+                  wallTime=None,
+                  memory=None,
+                  email=None,
+                  destination=None,
+                  inputDir=None,
+                  modelName=None,
+                  user=None,
+                  modelDir=None,
+                  twoDim=None,
+                  patchSizeH=None,
+                  patchSizeW=None,
+                  patchSizeD=None,
+                  valFraction=None,
+                  extension=None,
+                  saveForFiji=None,
+                  multichannel=None,
+                  outputDir=None):
+    twoDim = twoDim == 'True'
+    multichannel = multichannel == 'True'
+    saveForFiji = saveForFiji == 'True'
+    print('twoDim', twoDim)
+    print('multichannel', multichannel)
+    print('saveForFiji', saveForFiji)
+    if destination == 'training' and twoDim:
+         script_string = f'train_stardist_2d -i {inputDir} -n {modelDir} -m {modelName}'
+    elif destination == 'prediction' and twoDim:
+         script_string = f'predict_stardist_2d -i {inputDir} -n {modelDir} -m {modelName} -o {outputDir}'
+    elif destination == 'training' and not twoDim:
+         script_string = f'train_stardist_3d -i {inputDir} -n {modelDir} -m {modelName}'
+    else:
+         script_string = f'predict_stardist_3d -i {inputDir} -n {modelDir} -m {modelName} -o {outputDir}'
+    if multichannel and twoDim:
+         script_string += ' --multichannel'
+    if twoDim:
+         script_string += ' '.join([' -p', patchSizeH, patchSizeW])
+    else:
+         script_string += ' '.join([' -p', patchSizeH, patchSizeW, patchSizeD])
+
+    if destination == 'training':
+         script_string += f' -s {valFraction}'
+
+    script_string += f' --ext {extension}'
+    if twoDim and saveForFiji:
+         script_string += ' --save-for-fiji'
+
+    script_string += f' > batch_{jobName}.out'
+
     moab_file_content = "#!/bin/sh\n " \
          "########## Begin MOAB/Slurm header ##########\n" \
          f"#MSUB -N {jobName}\n" \
@@ -27,7 +75,7 @@ def moab_template(jobName, numberOfNodes, wallTime, memory, email, destination, 
          "#start python script\n" \
          "cd $HOME/stardist/ \n" \
          f"export USER={user} \n" \
-         f"python batchstardist.py -d {destination} -i {inputDir} -n {modelDir} -m {modelName} -o {outputDir} > batch_{jobName}.out\n" \
+         f"{script_string}\n" \
          "exit\n"
 
     return moab_file_content

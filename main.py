@@ -32,8 +32,10 @@ class TrainingForm(FlaskForm):
     extension = StringField('Extension of the input and target images (e.g. tiff)', validators=[DataRequired()])
     patchSizeH = IntegerField('Patch Height (px)', validators=[DataRequired()])
     patchSizeW = IntegerField('Patch Width (px)', validators=[DataRequired()])
-    multichannel = BooleanField('2D multichannel image (rgb)', validators=[DataRequired()])
-    twoDim = BooleanField('2D image', validators=[DataRequired()])
+    patchSizeD = IntegerField('Patch Depth (px)')
+    multichannel = BooleanField('2D multichannel image (rgb)')
+    saveForFiji = BooleanField('Save model for fiji (only if model is 2D)')
+    twoDim = BooleanField('generate a 2D model')
     valFraction = FloatField('Validation fraction', validators=[DataRequired(), NumberRange(min=0.1, max=0.5)])
     submit = SubmitField('Create files')
 
@@ -49,11 +51,9 @@ class PredictionForm(FlaskForm):
     modelDir = StringField('Model directory', validators=[DataRequired()])
     modelName = StringField('Name of the model', validators=[DataRequired()])
     extension = StringField('Extension of the images', validators=[DataRequired()])
+    multichannel = BooleanField('2D multichannel image (rgb)', default=False)
     twoDim = BooleanField('2D image')
     submit = SubmitField('Create files')
-
-
-
 
 @app.errorhandler(404)
 def page_not_found(e):
@@ -89,6 +89,14 @@ def training():
         config['training']['inputDir'] = form.inputDir.data
         config['general']['modelDir'] = form.modelDir.data
         config['training']['modelName'] = form.modelName.data
+        config['general']['extension'] = form.extension.data
+        config['training']['patchSizeH'] = str(form.patchSizeH.data)
+        config['training']['patchSizeW'] = str(form.patchSizeW.data)
+        config['training']['patchSizeD'] = str(form.patchSizeD.data)
+        config['2d']['multiChannel'] = str(form.multichannel.data)
+        config['2d']['saveForFiji'] = str(form.saveForFiji.data)
+        config['2d']['twoDim'] = str(form.twoDim.data)
+        config['training']['valFraction'] = str(form.valFraction.data)
         save_configuration(session.get('name'), config)
         create_files(config, destination='training')
         load_files(config, destination='training')
@@ -103,6 +111,14 @@ def training():
         form.inputDir.default = config['training']['inputDir']
         form.modelDir.default = config['general']['modelDir']
         form.modelName.default = config['training']['modelName']
+        form.extension.default = config['general']['extension']
+        form.patchSizeH.default = config['training']['patchSizeH']
+        form.patchSizeW.default = config['training']['patchSizeW']
+        form.patchSizeD.default = config['training']['patchSizeD']
+        form.multichannel.default = config['2d']['multiChannel'] == 'True'
+        form.saveForFiji.default = config['2d']['saveForFiji'] == 'True'
+        form.twoDim.default = config['2d']['twoDim'] == 'True'
+        form.valFraction.default = config['training']['valFraction']
         form.process()
     return render_template('training.html', form=form, name=session.get('name'))
 
@@ -122,6 +138,9 @@ def prediction():
         config['prediction']['outputDir'] = form.outputDir.data
         config['general']['modelDir'] = form.modelDir.data
         config['prediction']['modelName'] = form.modelName.data
+        config['general']['extension'] = str(form.extension.data)
+        config['2d']['multichannel'] = str(form.multichannel.data)
+        config['2d']['twoDim'] = str(form.twoDim.data)
         save_configuration(session.get('name'), config)
         create_files(config, destination='prediction')
         load_files(config, destination='prediction')
@@ -137,6 +156,9 @@ def prediction():
         form.outputDir.default = config['prediction']['outputDir']
         form.modelDir.default = config['general']['modelDir']
         form.modelName.default = config['prediction']['modelName']
+        form.extension.default = config['general']['extension']
+        form.multichannel.default = config['2d']['multichannel'] == 'True'
+        form.twoDim.default = config['2d']['twoDim'] == 'True'
         form.process()
     return render_template('prediction.html', form=form, name=session.get('name'))
 
