@@ -81,8 +81,7 @@ def load_files(config, destination='training'):
 
     # create ssh session in the cluster
     ssh = SSHClient()
-    # server = 'bwforcluster.bwservices.uni-heidelberg.de'
-    server = '129.206.158.52'
+    server = 'bwforcluster.bwservices.uni-heidelberg.de'
     ssh.load_system_host_keys()
     print('connecting to user', user, 'pwd', password, 'server', server)
     ssh.connect(server, username=user, password=password)
