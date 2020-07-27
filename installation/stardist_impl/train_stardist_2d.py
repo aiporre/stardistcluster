@@ -31,7 +31,7 @@ import numpy as np
 from csbdeep.utils import normalize
 from stardist import fill_label_holes, gputools_available
 from stardist.models import Config2D, StarDist2D
-from installation.stardist_impl.stardist_model_to_fiji import stardist_model_to_fiji
+from stardist_impl.stardist_model_to_fiji import stardist_model_to_fiji
 
 
 def check_training_data(train_images, train_labels):
@@ -222,10 +222,10 @@ def main():
                         help="The fraction of available data that is used for validation, default: .1")
     parser.add_argument('-p', '--patch_size', type=int, nargs=2, default=[256, 256],
                         help="Size of the image patches used to train the network, default: 256, 256")
-    parser.add_argument('--multichannel', type=bool, action='store_true',
+    parser.add_argument('--multichannel', action='store_true',
                         help="Do we have multichannel images? Default: False")
 
-    parser.add_argument('--save_for_fiji', type=bool, action='store_true',
+    parser.add_argument('--save_for_fiji', action='store_true',
                         help="Save the model for FIJI, default: False")
 
     args = parser.parse_args()

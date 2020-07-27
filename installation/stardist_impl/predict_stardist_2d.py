@@ -91,7 +91,7 @@ def main():
     parser.add_argument('-o', '--output-dir', type=str, default='Null',
                         help='output directory where the predicted images are saved')
     parser.add_argument('--ext', type=str, default='.tif', help="Image file extension, default: .tif")
-    parser.add_argument('--multichannel', type=bool, action='store_true', help="Do we have multichannel images? Default: 0")
+    parser.add_argument('--multichannel', action='store_true', help="Do we have multichannel images? Default: 0")
 
     args = parser.parse_args()
     model_path = os.path.join(args.models_dir,args.model_name)
