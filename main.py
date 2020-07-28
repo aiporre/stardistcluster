@@ -30,6 +30,7 @@ class TrainingForm(FlaskForm):
     modelDir = StringField('Output directory (model is stored)', validators=[DataRequired()])
     modelName = StringField('Name of the model', validators=[DataRequired()])
     extension = StringField('Extension of the input and target images (e.g. tiff)', validators=[DataRequired()])
+    nodeType = StringField('type of node (standard, best, gpu, fat, fat-ivy, best-sky, gpu-sky)', validators=[DataRequired()])
     patchSizeH = IntegerField('Patch Height (px)', validators=[DataRequired()])
     patchSizeW = IntegerField('Patch Width (px)', validators=[DataRequired()])
     patchSizeD = IntegerField('Patch Depth (px)')
@@ -51,6 +52,8 @@ class PredictionForm(FlaskForm):
     modelDir = StringField('Model directory', validators=[DataRequired()])
     modelName = StringField('Name of the model', validators=[DataRequired()])
     extension = StringField('Extension of the images', validators=[DataRequired()])
+    nodeType = StringField('type of node (standard, best, gpu, fat, fat-ivy, best-sky, gpu-sky)',
+                           validators=[DataRequired()])
     multichannel = BooleanField('2D multichannel image (rgb)', default=False)
     twoDim = BooleanField('2D image')
     submit = SubmitField('Create files')
@@ -90,6 +93,7 @@ def training():
         config['general']['modelDir'] = form.modelDir.data
         config['training']['modelName'] = form.modelName.data
         config['general']['extension'] = form.extension.data
+        config['general']['nodeType'] = form.nodeType.data
         config['training']['patchSizeH'] = str(form.patchSizeH.data)
         config['training']['patchSizeW'] = str(form.patchSizeW.data)
         config['training']['patchSizeD'] = str(form.patchSizeD.data)
@@ -112,6 +116,7 @@ def training():
         form.modelDir.default = config['general']['modelDir']
         form.modelName.default = config['training']['modelName']
         form.extension.default = config['general']['extension']
+        form.nodeType.default = config['general']['nodeType']
         form.patchSizeH.default = config['training']['patchSizeH']
         form.patchSizeW.default = config['training']['patchSizeW']
         form.patchSizeD.default = config['training']['patchSizeD']
@@ -139,6 +144,7 @@ def prediction():
         config['general']['modelDir'] = form.modelDir.data
         config['prediction']['modelName'] = form.modelName.data
         config['general']['extension'] = str(form.extension.data)
+        config['general']['nodeType'] = form.nodeType.data
         config['2d']['multichannel'] = str(form.multichannel.data)
         config['2d']['twoDim'] = str(form.twoDim.data)
         save_configuration(session.get('name'), config)
@@ -157,6 +163,7 @@ def prediction():
         form.modelDir.default = config['general']['modelDir']
         form.modelName.default = config['prediction']['modelName']
         form.extension.default = config['general']['extension']
+        form.nodeType.default = config['general']['nodeType']
         form.multichannel.default = config['2d']['multichannel'] == 'True'
         form.twoDim.default = config['2d']['twoDim'] == 'True'
         form.process()

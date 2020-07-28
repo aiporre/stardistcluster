@@ -41,6 +41,7 @@ def create_files(config, destination='training'):
                                           patchSizeD = config['training']['patchSizeD'],
                                           valFraction = config['training']['valFraction'],
                                           extension = config['general']['extension'],
+                                          nodeType=config['general']['nodeType'],
                                           saveForFiji = config['2d']['saveForFiji'],
                                           multichannel = config['2d']['multichannel'])
 
@@ -57,6 +58,7 @@ def create_files(config, destination='training'):
                                           modelDir=config['general']['modelDir'],
                                           twoDim=config['2d']['twoDim'],
                                           extension=config['general']['extension'],
+                                          nodeType=config['general']['nodeType'],
                                           multichannel=config['2d']['multichannel'],
                                           outputDir=config['prediction']['outputDir'])
 
@@ -83,7 +85,6 @@ def load_files(config, destination='training'):
     ssh = SSHClient()
     server = 'bwforcluster.bwservices.uni-heidelberg.de'
     ssh.load_system_host_keys()
-    print('connecting to user', user, 'pwd', password, 'server', server)
     ssh.connect(server, username=user, password=password)
     # create the scp transport client
     scp = SCPClient(ssh.get_transport())
@@ -91,13 +92,25 @@ def load_files(config, destination='training'):
     # create dir USER at fixed directory $HOME/stardist/
     user_dir = '~/stardist/%s' % config['general']['user']
     ssh.exec_command('mkdir -p %s' % user_dir)
+    print('Creating directory ', user_dir)
     # copy moab generated {jobName}_training.moab to $HOME/stardist/$USER
     moab_file = 'config_%s_%s.moab' % (config['general']['jobName'], destination)
     scp.put('temp/%s' % moab_file, remote_path= user_dir)
+    print('moving moab_file', moab_file, 'to ', user_dir)
     # copy sh generated {jobName}_training.sh to $HOME/stardist/$USER
     sh_file = 'starjob_%s_%s.sh' % (config['general']['jobName'], destination)
-    scp.put('temp/%s' % sh_file, remote_path= user_dir)
+    scp.put('temp/%s' % sh_file, remote_path= user_dir )
+    print('moving sh file', sh_file, 'to ', user_dir)
     # execute job in the cluster i.e submit the jobs
-    ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command('bash %s/%s' % (user_dir, sh_file))
-    print(ssh_stdout)
-    print(ssh_stderr)
+    def execute_comand(command):
+        ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(command)
+        print('execute command :', command)
+        out = ssh_stdout.read().decode().strip()
+        error = ssh_stdout.read().decode().strip()
+        print('OUT:', out)
+        print('ERROR:', error)
+
+    execute_comand( 'vi %s/%s -c \'set ff=unix\' -c \'x\'' % (user_dir, sh_file))
+    execute_comand('vi %s/%s -c \'set ff=unix\' -c \'x\'' % (user_dir, moab_file))
+    execute_comand( 'bash %s/%s' % (user_dir, sh_file))
+    ssh.close()
