@@ -43,13 +43,14 @@ def get_image_files(input_dir, ext):
 
 # could be done more efficiently, see
 # https://github.com/hci-unihd/batchlib/blob/master/batchlib/segmentation/stardist_prediction.py
-def run_prediction(image_files, model_path, output_dir, multichannel):
+def run_prediction(image_files, model_path, output_dir):
 
     # load the model
+    print('loading model..')
     model_root, model_name = os.path.split(model_path.rstrip('/'))
     model = StarDist3D(None, name=model_name, basedir=model_root)
-
     os.makedirs(output_dir, exist_ok=True)
+    print('created output dir:', output_dir)
 
     # normalization parameters: lower and upper percentile used for image normalization
     # maybe these should be exposed
@@ -65,6 +66,7 @@ def run_prediction(image_files, model_path, output_dir, multichannel):
         im_name = os.path.split(im_file)[1]
         save_path = os.path.join(output_dir, im_name)
         imageio.imsave(save_path, pred)
+        print('output done:', save_path, pred)
 
 
 def predict_stardist(model_path, input_dir, output_dir, ext):
