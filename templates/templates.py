@@ -14,6 +14,7 @@ def moab_template(jobName=None,
                   patchSizeD=None,
                   valFraction=None,
                   extension=None,
+                  nodeType=None,
                   saveForFiji=None,
                   multichannel=None,
                   outputDir=None):
@@ -47,12 +48,12 @@ def moab_template(jobName=None,
 
     script_string += f' > batch_{jobName}.out'
 
-    moab_file_content = "#!/bin/sh\n " \
+    moab_file_content = "#!/bin/sh\n" \
          "########## Begin MOAB/Slurm header ##########\n" \
          f"#MSUB -N {jobName}\n" \
          "#\n" \
          "# Request number of nodes and CPU cores per node for job\n" \
-         f"#MSUB -l nodes={numberOfNodes}:ppn=16:best\n" \
+         f"#MSUB -l nodes={numberOfNodes}:ppn=16:{nodeType}\n" \
          "# Estimated wallclock time for job\n" \
          f"#MSUB -l walltime={wallTime}\n" \
          "# Memory per processor:\n" \
@@ -75,6 +76,8 @@ def moab_template(jobName=None,
          "#start python script\n" \
          "cd $HOME/stardist/ \n" \
          f"export USER={user} \n" \
+         "eval \"$($HOME/miniconda/bin/conda shell.bash hook)\"\n" \
+         "conda activate stardist-gpu \n" \
          f"{script_string}\n" \
          "exit\n"
 
@@ -83,5 +86,6 @@ def moab_template(jobName=None,
 def sh_template(user,moab_file):
      sh_file_content = "#!/bin/sh\n" \
                         f"export USER={user} \n" \
-                        f"msub $HOME/stardist/{user}/{moab_file}\n"
+                        f"msub $HOME/stardist/{user}/{moab_file}\n" \
+                        "echo Done"
      return sh_file_content
