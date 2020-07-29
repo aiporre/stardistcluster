@@ -34,9 +34,9 @@ def moab_template(jobName=None,
          script_string = f'predict_stardist_3d -i {inputDir} -n {modelDir} -m {modelName} -o {outputDir}'
     if multichannel and twoDim:
          script_string += ' --multichannel'
-    if twoDim:
+    if twoDim and destination == 'training':
          script_string += ' '.join([' -p', patchSizeH, patchSizeW])
-    else:
+    elif not twoDim and destination == 'training':
          script_string += ' '.join([' -p', patchSizeH, patchSizeW, patchSizeD])
 
     if destination == 'training':
@@ -46,7 +46,7 @@ def moab_template(jobName=None,
     if twoDim and saveForFiji:
          script_string += ' --save-for-fiji'
 
-    script_string += f' > batch_{jobName}.out'
+    script_string += f' > batch_{jobName}.out 2>&1'
 
     moab_file_content = "#!/bin/sh\n" \
          "########## Begin MOAB/Slurm header ##########\n" \
