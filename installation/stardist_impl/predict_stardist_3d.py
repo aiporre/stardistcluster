@@ -24,7 +24,9 @@ import argparse
 import os
 from glob import glob
 
+from tifffile import imread
 import imageio
+from tifffile import imsave
 from tqdm import tqdm
 
 from csbdeep.utils import normalize
@@ -65,8 +67,8 @@ def run_prediction(image_files, model_path, output_dir):
 
         im_name = os.path.split(im_file)[1]
         save_path = os.path.join(output_dir, im_name)
-        imageio.imsave(save_path, pred)
-        print('output done:', save_path, pred)
+        imsave(save_path, pred)
+        print('output done:', save_path)
 
 
 def predict_stardist(model_path, input_dir, output_dir, ext):
