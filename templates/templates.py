@@ -49,7 +49,7 @@ def moab_template(jobName=None,
     if destination == "prediction" and memory_usage is not None and not memory_usage == "100":
         script_string += f' -r {memory_usage}'
 
-    script_string += f' > ./{user}/batch_{jobName}.out 2>&1'
+    script_string += f' > ./{user}/batch_{user}_{jobName}.out 2>&1'
 
     moab_file_content = "#!/bin/sh\n" \
                         "########## Begin MOAB/Slurm header ##########\n" \
