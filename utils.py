@@ -67,9 +67,7 @@ def create_files(config, destination='training'):
 
     with open('temp/%s' % sh_file, 'w') as f:
         f.write(sh_file_content)
-
-
-def load_files(config, destination='training'):
+def get_ssh_client():
     key = open("access.key", "rb").read()
     f = Fernet(key)
     with open('user.key', "rb") as file:
@@ -86,6 +84,26 @@ def load_files(config, destination='training'):
     server = 'bwforcluster.bwservices.uni-heidelberg.de'
     ssh.load_system_host_keys()
     ssh.connect(server, username=user, password=password)
+    return ssh
+
+def _execute_command(ssh, command):
+    ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(command)
+    print('execute command :', command)
+    out = ssh_stdout.read().decode().strip()
+    error = ssh_stdout.read().decode().strip()
+    print('OUT:', out)
+    if len(error)>0:
+        print('ERROR:', error)
+    return out + '\n' + error
+
+def execute_ssh_command(command):
+    ssh = get_ssh_client()
+    return _execute_command(ssh, command)
+
+
+
+def load_files(config, destination='training'):
+    ssh = get_ssh_client()
     # create the scp transport client
     scp = SCPClient(ssh.get_transport())
 
@@ -102,15 +120,7 @@ def load_files(config, destination='training'):
     scp.put('temp/%s' % sh_file, remote_path= user_dir )
     print('moving sh file', sh_file, 'to ', user_dir)
     # execute job in the cluster i.e submit the jobs
-    def execute_comand(command):
-        ssh_stdin, ssh_stdout, ssh_stderr = ssh.exec_command(command)
-        print('execute command :', command)
-        out = ssh_stdout.read().decode().strip()
-        error = ssh_stdout.read().decode().strip()
-        print('OUT:', out)
-        print('ERROR:', error)
-
-    execute_comand( 'vi %s/%s -c \'set ff=unix\' -c \'x\'' % (user_dir, sh_file))
-    execute_comand('vi %s/%s -c \'set ff=unix\' -c \'x\'' % (user_dir, moab_file))
-    execute_comand( 'bash %s/%s' % (user_dir, sh_file))
+    _execute_command(ssh, 'vi %s/%s -c \'set ff=unix\' -c \'x\'' % (user_dir, sh_file))
+    _execute_command(ssh, 'vi %s/%s -c \'set ff=unix\' -c \'x\'' % (user_dir, moab_file))
+    _execute_command(ssh, 'bash %s/%s' % (user_dir, sh_file))
     ssh.close()

@@ -5,8 +5,8 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, IntegerField, BooleanField, FloatField
 from wtforms.validators import DataRequired, NumberRange, Email
 from flask_script import Manager
-from utils import get_configuration, save_configuration, create_files, load_files
-
+from utils import get_configuration, save_configuration, create_files, load_files, execute_ssh_command
+import time
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'hard to guess string'
 manager = Manager(app)
@@ -127,6 +127,37 @@ def training():
         form.process()
     return render_template('training.html', form=form, name=session.get('name'))
 
+@app.route('/outputs/job/<job>', methods=['GET'])
+def job_output(job):
+    lines = execute_ssh_command("cat " + session.get('jobs')[job])
+    return {'job_output_text' : lines.split('\n')}
+
+@app.route('/outputs', methods=['GET'])
+def outputs():
+    lines = execute_ssh_command("du -a ./stardist/ | grep .out")
+    def parse_job(line):
+        start = line.find('batch_')
+        if start<0:
+            return '-1'
+        start += len('batch_')
+        return line[start:-4]
+    def parse_path(line):
+        start1 = line.find('batch_')
+        if start1<0:
+            return '-1'
+        start2 = line.find('./stardist/')
+        return line[start2:]
+
+    current_jobs = [parse_job(line) for line  in lines.split('\n') if not parse_job(line) == '-1']
+    current_paths = [parse_path(line) for line in lines.split('\n') if not parse_path(line) == '-1']
+    session['jobs'] = {k : v for k, v in zip(current_jobs, current_paths)}
+    return render_template('outputs.html', jobs = current_jobs)
+
+@app.route('/jobs', methods=['GET'])
+def jobs():
+    lines = execute_ssh_command('showq')
+    return render_template('jobs.html', lines=lines.split('\n'))
+
 @app.route('/prediction', methods=['GET', 'POST'])
 def prediction():
     form = PredictionForm()
@@ -148,8 +179,9 @@ def prediction():
         config['2d']['multichannel'] = str(form.multichannel.data)
         config['2d']['twoDim'] = str(form.twoDim.data)
         save_configuration(session.get('name'), config)
-        create_files(config, destination='prediction')
-        load_files(config, destination='prediction')
+        # create_files(config, destination='prediction')
+        # load_files(config, destination='prediction')
+        time.sleep(10.0)
         return redirect(url_for('prediction'))
     else:
         form.jobName.default = config['general']['jobName']

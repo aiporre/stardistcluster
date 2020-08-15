@@ -1,0 +1,28 @@
+
+
+
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}Stardist Cluster{% endblock %}
+
+{% block page_content %}
+<div class="page-header">
+  <div class="row">
+    <div class="row">
+      <h1>Job logs:</h1>
+    </div>
+    <div class="row mt-3" id="job-buttons">
+      {% for job in jobs %}
+        <div class="row mt-10" id=job-button-{{job|e}}}>
+          <button class="job-btn" data-job="{{job|e}}"> get logs of job : {{ job|e }}</button>
+          <div id="job-txt-{{job|e}}"></div>
+        </div>
+        <hr>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
