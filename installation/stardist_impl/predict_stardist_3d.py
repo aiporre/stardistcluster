@@ -135,7 +135,7 @@ def main():
     parser.add_argument('-o', '--output-dir', type=str, default='Null',
                         help='output directory where the predicted images are saved')
     parser.add_argument('--ext', type=str, default='.tif', help="Image file extension, default: .tif")
-    parser.add_argument('-r','--memory-usage', type=int, default=-1,
+    parser.add_argument('-r','--memory-usage', type=int, default=100,
                         help="Memory usage (100% means it uses the whole memory). Defaults 100%")
 
     args = parser.parse_args()
