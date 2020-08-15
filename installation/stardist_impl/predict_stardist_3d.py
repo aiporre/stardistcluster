@@ -30,6 +30,7 @@ from tifffile import imsave
 from tqdm import tqdm
 
 from csbdeep.utils import normalize
+from csbdeep.data import PercentileNormalizer
 from stardist.models import StarDist3D
 
 
@@ -62,9 +63,37 @@ def run_prediction(image_files, model_path, output_dir):
 
     for im_file in tqdm(image_files, desc="run stardist prediction"):
         im = imageio.volread(im_file)
-        im = normalize(im, lower_percentile, upper_percentile, axis=ax_norm)
-        pred, _ = model.predict_instances(im)
 
+        #
+        try:
+            print('----------->> ', im.shape)
+            im = normalize(im, lower_percentile, upper_percentile, axis=ax_norm)
+            pred, _ = model.predict_instances(im)
+        except MemoryError as e:
+
+            if len(model.config.axes)>3:
+                print(f'Warning: Model {model.config.axes} axes configutation doesn\'t match image dimensions {im.shape}. Using ZYX from ax_norm={ax_norm}')
+                axes ='ZYX'
+            else:
+                axes = model.config.axes
+            normalizer = PercentileNormalizer(lower_percentile, upper_percentile, axis=ax_norm)
+            memory_reduction = 0.1
+            block_size = [int(memory_reduction*s) for s in im.shape]
+            min_overlap= [int(0.1*b) for b in block_size]
+            context= [int(0.3*b) for b in block_size]
+
+            for size, bz, mo, c in zip(im.shape, block_size, min_overlap, context):
+                assert 0 <= mo + 2 * c < bz <= size, '0 <= min_overlap + 2 * context < block_size <= size'
+                assert bz > 0, 'block_size > 1'
+            print(f'min_overlap = {min_overlap} context = {context}, block_size = {block_size}, size ={im.shape}')
+            pred, _ = model.predict_instances_big(im,
+                                                  axes=axes,
+                                                  block_size=block_size,
+                                                  min_overlap=min_overlap,
+                                                  context=context,
+                                                  n_tiles=model._guess_n_tiles(im),
+                                                  normalizer=normalizer
+                                                  )
         im_name = os.path.split(im_file)[1]
         save_path = os.path.join(output_dir, im_name)
         imsave(save_path, pred)
