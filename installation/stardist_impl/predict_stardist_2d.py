@@ -92,7 +92,7 @@ def run_prediction(image_files, model_path, output_dir, multichannel, memory_usa
             print(f'min_overlap = {min_overlap} context = {context}, block_size = {block_size}, size ={im.shape}')
             from tempfile import mkdtemp
             import os.path as path
-            filename = path.join('D:/stardistcluster/', 'temp_labels.dat')
+            filename = path.join(mkdtemp(), 'temp_labels.dat')
             print("created temporal label prediction file at: ", filename)
             labels_out = np.memmap(filename, dtype='int32', mode='w+', shape=im.shape)
             pred, _ = model.predict_instances_big(im,
