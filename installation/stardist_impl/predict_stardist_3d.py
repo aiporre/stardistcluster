@@ -65,7 +65,7 @@ def run_prediction(image_files, model_path, output_dir, memory_usage):
         im = imageio.volread(im_file)
 
         #
-        if memory_reduction==100:
+        if memory_usage==100:
             print('Using the whole memory in without tiles ', im.shape)
             im = normalize(im, lower_percentile, upper_percentile, axis=ax_norm)
             pred, _ = model.predict_instances(im)
