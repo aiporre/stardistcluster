@@ -142,7 +142,7 @@ def main():
     model_path = os.path.join(args.models_dir, args.model_name)
 
 
-    predict_stardist(model_path, args.input_dir, args.output_dir, args.ext, args.memory_reduction)
+    predict_stardist(model_path, args.input_dir, args.output_dir, args.ext, args.memory_usage)
 
 
 if __name__ == '__main__':
