@@ -46,6 +46,7 @@ class PredictionForm(FlaskForm):
     numberOfNodes = StringField('Number of Nodes', validators=[DataRequired()])
     wallTime = StringField('Wall time (format HH:MM)', validators=[DataRequired()])
     memory = StringField('Max Memory in mb', validators=[DataRequired()])
+    memoryUsage = IntegerField('Memory usage %', validators=[DataRequired(), NumberRange(min=0, max=100)])
     email = StringField('Feedback email', validators=[DataRequired(), Email()])
     inputDir = StringField('Input directory (contains tiff images)', validators=[DataRequired()])
     outputDir = StringField('Output directory (predicted labeled images are generated)', validators=[DataRequired()])
@@ -65,7 +66,7 @@ def page_not_found(e):
 
 @app.errorhandler(500)
 def internal_server_error(e):
-    return render_template('500.html'), 500
+    return render_template('500.html',message=e), 500
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -169,6 +170,7 @@ def prediction():
         config['general']['numberOfNodes'] = form.numberOfNodes.data
         config['general']['wallTime'] = form.wallTime.data
         config['general']['memory'] = form.memory.data
+        config['prediction']['memoryUsage'] = str(form.memoryUsage.data)
         config['general']['email'] = form.email.data
         config['prediction']['inputDir'] = form.inputDir.data
         config['prediction']['outputDir'] = form.outputDir.data
@@ -179,7 +181,7 @@ def prediction():
         config['2d']['multichannel'] = str(form.multichannel.data)
         config['2d']['twoDim'] = str(form.twoDim.data)
         save_configuration(session.get('name'), config)
-        # create_files(config, destination='prediction')
+        create_files(config, destination='prediction')
         # load_files(config, destination='prediction')
         time.sleep(10.0)
         return redirect(url_for('prediction'))
@@ -189,6 +191,7 @@ def prediction():
         form.numberOfNodes.default = config['general']['numberOfNodes']
         form.wallTime.default = config['general']['wallTime']
         form.memory.default = config['general']['memory']
+        form.memoryUsage.default = config['prediction']['memoryUsage']
         form.email.default = config['general']['email']
         form.inputDir.default = config['prediction']['inputDir']
         form.outputDir.default = config['prediction']['outputDir']

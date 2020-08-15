@@ -46,7 +46,7 @@ def get_image_files(input_dir, ext):
 
 # could be done more efficiently, see
 # https://github.com/hci-unihd/batchlib/blob/master/batchlib/segmentation/stardist_prediction.py
-def run_prediction(image_files, model_path, output_dir, memory_reduction):
+def run_prediction(image_files, model_path, output_dir, memory_usage):
 
     # load the model
     print('loading model..')
@@ -65,7 +65,7 @@ def run_prediction(image_files, model_path, output_dir, memory_reduction):
         im = imageio.volread(im_file)
 
         #
-        if memory_reduction<0:
+        if memory_reduction==100:
             print('Using the whole memory in without tiles ', im.shape)
             im = normalize(im, lower_percentile, upper_percentile, axis=ax_norm)
             pred, _ = model.predict_instances(im)
@@ -76,8 +76,8 @@ def run_prediction(image_files, model_path, output_dir, memory_reduction):
             else:
                 axes = model.config.axes
             normalizer = PercentileNormalizer(lower_percentile, upper_percentile)
-            print('Computing with memory reduction usage ', memory_reduction/100, "% of original size")
-            memory_reduction = memory_reduction/100
+            print('Computing with memory reduction usage ', memory_usage, "% of original size")
+            memory_reduction = memory_usage/100
             block_size = [int(memory_reduction*s) for s in im.shape]
             min_overlap= [int(0.1*b) for b in block_size]
             context= [int(0.3*b) for b in block_size]
@@ -115,13 +115,13 @@ def run_prediction(image_files, model_path, output_dir, memory_reduction):
         print('output done:', save_path)
 
 
-def predict_stardist(model_path, input_dir, output_dir, ext, memory_reduction):
+def predict_stardist(model_path, input_dir, output_dir, ext, memory_usage):
     print("Loading images")
     image_files = get_image_files(input_dir, ext)
     print("Found", len(image_files), "images for prediction")
 
     print("Start prediction ...")
-    run_prediction(image_files, model_path, output_dir, memory_reduction)
+    run_prediction(image_files, model_path, output_dir, memory_usage)
     print("Finished prediction")
 
 
@@ -135,7 +135,8 @@ def main():
     parser.add_argument('-o', '--output-dir', type=str, default='Null',
                         help='output directory where the predicted images are saved')
     parser.add_argument('--ext', type=str, default='.tif', help="Image file extension, default: .tif")
-    parser.add_argument('-r','--memory-reduction', type=int, default=-1, help="Memory reduction (-1 means it uses the whole memory). Defaults -1")
+    parser.add_argument('-r','--memory-usage', type=int, default=-1,
+                        help="Memory usage (100% means it uses the whole memory). Defaults 100%")
 
     args = parser.parse_args()
     model_path = os.path.join(args.models_dir, args.model_name)

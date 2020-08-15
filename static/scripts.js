@@ -19,7 +19,7 @@ $(document).ready(function() {
 
    });
    $('#submit').click(function () {
-       alert('form submitted!');
+       alert('Submit Job?');
        $("#loading").html("<div id='loading' class='loader'></div>\n")
        return true;
    });

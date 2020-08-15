@@ -46,7 +46,7 @@ def get_image_files(input_dir, ext):
 
 # could be done more efficiently, see
 # https://github.com/hci-unihd/batchlib/blob/master/batchlib/segmentation/stardist_prediction.py
-def run_prediction(image_files, model_path, output_dir, multichannel, memory_reduction):
+def run_prediction(image_files, model_path, output_dir, multichannel, memory_usage):
 
 
     # load the model
@@ -67,21 +67,20 @@ def run_prediction(image_files, model_path, output_dir, multichannel, memory_red
         else:
             im = imageio.imread(im_file)
 
-        if memory_reduction < 0:
-            print('Prediction on Memory. No memory reduction')
+        if memory_usage == 100:
+            print('Prediction on 100% Memory. No memory reduction')
             im = normalize(im, lower_percentile, upper_percentile, axis=ax_norm)
             pred, _ = model.predict_instances(im)
 
         else:
-            print('Memory reduction ', memory_reduction, '%')
-            memory_reduction = memory_reduction/100
+            print('Memory usage of ', memory_usage, '%')
+            memory_reduction = memory_usage/100
             if len(model.config.axes)>3:
                 print(f'Warning: Model {model.config.axes} axes configutation doesn\'t match image dimensions {im.shape}. Using ZYX from ax_norm={ax_norm}')
                 axes ='ZYX'
             else:
                 axes = model.config.axes
             normalizer = PercentileNormalizer(lower_percentile, upper_percentile)
-            print('Computing with memory reduction usage ', memory_reduction/100, "% of original size")
             memory_reduction = memory_reduction/100
             block_size = [int(memory_reduction*s) for s in im.shape]
             min_overlap= [int(0.1*b) for b in block_size]
@@ -119,13 +118,13 @@ def run_prediction(image_files, model_path, output_dir, multichannel, memory_red
         imageio.imsave(save_path, pred)
 
 
-def predict_stardist(model_path, input_dir, output_dir, ext, multichannel, memory_reduction):
+def predict_stardist(model_path, input_dir, output_dir, ext, multichannel, memory_usage):
     print("Loading images")
     image_files = get_image_files(input_dir, ext)
     print("Found", len(image_files), "images for prediction")
 
     print("Start prediction ...")
-    run_prediction(image_files, model_path, output_dir, multichannel, memory_reduction)
+    run_prediction(image_files, model_path, output_dir, multichannel, memory_usage)
     print("Finished prediction")
 
 
@@ -140,12 +139,12 @@ def main():
                         help='output directory where the predicted images are saved')
     parser.add_argument('--ext', type=str, default='.tif', help="Image file extension, default: .tif")
     parser.add_argument('--multichannel', action='store_true', help="Do we have multichannel images? Default: 0")
-    parser.add_argument('-r', '--memory-reduction', type=int, default=-1,
-                        help="Memory reduction (-1 means it uses the whole memory). Defaults -1")
+    parser.add_argument('-r', '--memory-memory_usage', type=int, default=100,
+                        help="Memory memory_usage percentage. Defaults 100 %")
 
     args = parser.parse_args()
     model_path = os.path.join(args.models_dir,args.model_name)
-    predict_stardist(model_path, args.input_dir, args.output_dir, args.ext, args.multichannel, args.memory_reduction)
+    predict_stardist(model_path, args.input_dir, args.output_dir, args.ext, args.multichannel, args.memory_usage)
 
 if __name__ == '__main__':
     main()

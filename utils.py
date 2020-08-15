@@ -60,7 +60,8 @@ def create_files(config, destination='training'):
                                           extension=config['general']['extension'],
                                           nodeType=config['general']['nodeType'],
                                           multichannel=config['2d']['multichannel'],
-                                          outputDir=config['prediction']['outputDir'])
+                                          outputDir=config['prediction']['outputDir'],
+                                          memory_usage=config['prediction']['memoryUsage'])
 
     with open('temp/%s' % moab_file, 'w') as f:
         f.write(moab_file_content)
