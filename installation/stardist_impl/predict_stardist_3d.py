@@ -32,7 +32,7 @@ from tqdm import tqdm
 from csbdeep.utils import normalize
 from csbdeep.data import PercentileNormalizer
 from stardist.models import StarDist3D
-
+import numpy as np
 
 def get_image_files(input_dir, ext):
     # get the image and label mask paths and validate them
@@ -46,7 +46,7 @@ def get_image_files(input_dir, ext):
 
 # could be done more efficiently, see
 # https://github.com/hci-unihd/batchlib/blob/master/batchlib/segmentation/stardist_prediction.py
-def run_prediction(image_files, model_path, output_dir):
+def run_prediction(image_files, model_path, output_dir, memory_reduction):
 
     # load the model
     print('loading model..')
@@ -65,19 +65,19 @@ def run_prediction(image_files, model_path, output_dir):
         im = imageio.volread(im_file)
 
         #
-        try:
-            print('----------->> ', im.shape)
+        if memory_reduction<0:
+            print('Using the whole memory in without tiles ', im.shape)
             im = normalize(im, lower_percentile, upper_percentile, axis=ax_norm)
             pred, _ = model.predict_instances(im)
-        except MemoryError as e:
-
+        else:
             if len(model.config.axes)>3:
                 print(f'Warning: Model {model.config.axes} axes configutation doesn\'t match image dimensions {im.shape}. Using ZYX from ax_norm={ax_norm}')
                 axes ='ZYX'
             else:
                 axes = model.config.axes
-            normalizer = PercentileNormalizer(lower_percentile, upper_percentile, axis=ax_norm)
-            memory_reduction = 0.1
+            normalizer = PercentileNormalizer(lower_percentile, upper_percentile)
+            print('Computing with memory reduction usage ', memory_reduction/100, "% of original size")
+            memory_reduction = memory_reduction/100
             block_size = [int(memory_reduction*s) for s in im.shape]
             min_overlap= [int(0.1*b) for b in block_size]
             context= [int(0.3*b) for b in block_size]
@@ -86,27 +86,42 @@ def run_prediction(image_files, model_path, output_dir):
                 assert 0 <= mo + 2 * c < bz <= size, '0 <= min_overlap + 2 * context < block_size <= size'
                 assert bz > 0, 'block_size > 1'
             print(f'min_overlap = {min_overlap} context = {context}, block_size = {block_size}, size ={im.shape}')
+            from tempfile import mkdtemp
+            import os.path as path
+            filename = path.join('D:/stardistcluster/', 'temp_labels.dat')
+            print("created temporal label prediction file at: ", filename)
+            labels_out = np.memmap(filename, dtype='int32', mode='w+', shape=im.shape)
             pred, _ = model.predict_instances_big(im,
                                                   axes=axes,
                                                   block_size=block_size,
                                                   min_overlap=min_overlap,
                                                   context=context,
                                                   n_tiles=model._guess_n_tiles(im),
-                                                  normalizer=normalizer
+                                                  normalizer=normalizer,
+                                                  labels_out=labels_out
                                                   )
+            size = im.shape
+            del im
+            pred = np.fromfile(filename, np.int32).reshape(size)
+            os.remove(filename)
+            if os.path.exists(filename):
+                print('Warning: file still exists delete it manually.: ', filename)
+            labels_out.flush()
+
+
         im_name = os.path.split(im_file)[1]
         save_path = os.path.join(output_dir, im_name)
         imsave(save_path, pred)
         print('output done:', save_path)
 
 
-def predict_stardist(model_path, input_dir, output_dir, ext):
+def predict_stardist(model_path, input_dir, output_dir, ext, memory_reduction):
     print("Loading images")
     image_files = get_image_files(input_dir, ext)
     print("Found", len(image_files), "images for prediction")
 
     print("Start prediction ...")
-    run_prediction(image_files, model_path, output_dir)
+    run_prediction(image_files, model_path, output_dir, memory_reduction)
     print("Finished prediction")
 
 
@@ -120,12 +135,13 @@ def main():
     parser.add_argument('-o', '--output-dir', type=str, default='Null',
                         help='output directory where the predicted images are saved')
     parser.add_argument('--ext', type=str, default='.tif', help="Image file extension, default: .tif")
+    parser.add_argument('-r','--memory-reduction', type=int, default=-1, help="Memory reduction (-1 means it uses the whole memory). Defaults -1")
 
     args = parser.parse_args()
     model_path = os.path.join(args.models_dir, args.model_name)
 
 
-    predict_stardist(model_path, args.input_dir, args.output_dir, args.ext)
+    predict_stardist(model_path, args.input_dir, args.output_dir, args.ext, args.memory_reduction)
 
 
 if __name__ == '__main__':
