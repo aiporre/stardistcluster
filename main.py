@@ -182,8 +182,7 @@ def prediction():
         config['2d']['twoDim'] = str(form.twoDim.data)
         save_configuration(session.get('name'), config)
         create_files(config, destination='prediction')
-        # load_files(config, destination='prediction')
-        time.sleep(10.0)
+        load_files(config, destination='prediction')
         return redirect(url_for('prediction'))
     else:
         form.jobName.default = config['general']['jobName']
