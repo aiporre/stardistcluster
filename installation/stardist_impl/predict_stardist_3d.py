@@ -117,9 +117,11 @@ def run_prediction(image_files, model_path, output_dir, memory_usage):
 
 def predict_stardist(model_path, input_dir, output_dir, ext, memory_usage):
     print("Loading images")
-    image_files = get_image_files(input_dir, ext)
+    if os.path.isdir(input_dir):
+        image_files = get_image_files(input_dir, ext)
+    else:
+        image_files = [input_dir]
     print("Found", len(image_files), "images for prediction")
-
     print("Start prediction ...")
     run_prediction(image_files, model_path, output_dir, memory_usage)
     print("Finished prediction")
