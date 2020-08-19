@@ -104,7 +104,9 @@ def training():
         config['training']['valFraction'] = str(form.valFraction.data)
         save_configuration(session.get('name'), config)
         create_files(config, destination='training')
-        load_files(config, destination='training')
+        ssh = session.get('ssh') if 'ssh' in session.keys() else None
+        load_files(ssh, config, destination='training')
+        session['ssh'] = ssh
         return redirect(url_for('training'))
     else:
         form.jobName.default = config['general']['jobName']
@@ -130,12 +132,16 @@ def training():
 
 @app.route('/outputs/job/<job>', methods=['GET'])
 def job_output(job):
-    lines = execute_ssh_command("cat " + session.get('jobs')[job])
+    ssh = session.get('ssh') if 'ssh' in session.keys() else None
+    lines = execute_ssh_command(ssh, "cat " + session.get('jobs')[job])
+    session['ssh'] = ssh
     return {'job_output_text' : lines.split('\n')}
 
 @app.route('/outputs', methods=['GET'])
 def outputs():
-    lines = execute_ssh_command("du -a ./stardist/ | grep .out")
+    ssh = session.get('ssh') if 'ssh' in session.keys() else None
+    lines = execute_ssh_command(ssh, "du -a ./stardist/ | grep .out")
+    session['ssh'] = ssh
     def parse_job(line):
         start = line.find('batch_')
         if start<0:
@@ -156,7 +162,9 @@ def outputs():
 
 @app.route('/jobs', methods=['GET'])
 def jobs():
-    lines = execute_ssh_command('showq')
+    ssh = session.get('ssh') if 'ssh' in session.keys() else None
+    lines = execute_ssh_command(ssh, 'showq')
+    session['ssh'] = ssh
     return render_template('jobs.html', lines=lines.split('\n'))
 
 @app.route('/prediction', methods=['GET', 'POST'])
@@ -182,7 +190,9 @@ def prediction():
         config['2d']['twoDim'] = str(form.twoDim.data)
         save_configuration(session.get('name'), config)
         create_files(config, destination='prediction')
-        load_files(config, destination='prediction')
+        ssh = session.get('ssh') if 'ssh' in session.keys() else None
+        load_files(ssh, config, destination='prediction')
+        session['ssh'] = ssh
         return redirect(url_for('prediction'))
     else:
         form.jobName.default = config['general']['jobName']

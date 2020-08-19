@@ -97,14 +97,16 @@ def _execute_command(ssh, command):
         print('ERROR:', error)
     return out + '\n' + error
 
-def execute_ssh_command(command):
-    ssh = get_ssh_client()
+def execute_ssh_command(ssh, command):
+    if ssh is None or ssh.get_transport() is None or not ssh.get_transport().is_active():
+        ssh = get_ssh_client()
     return _execute_command(ssh, command)
 
 
+def load_files(ssh, config, destination='training'):
 
-def load_files(config, destination='training'):
-    ssh = get_ssh_client()
+    if ssh is None or ssh.get_transport() is None or not ssh.get_transport().is_active():
+        ssh = get_ssh_client()
     # create the scp transport client
     scp = SCPClient(ssh.get_transport())
 
@@ -120,8 +122,9 @@ def load_files(config, destination='training'):
     sh_file = 'starjob_%s_%s.sh' % (config['general']['jobName'], destination)
     scp.put('temp/%s' % sh_file, remote_path= user_dir )
     print('moving sh file', sh_file, 'to ', user_dir)
+    scp.close()
     # execute job in the cluster i.e submit the jobs
     _execute_command(ssh, 'vi %s/%s -c \'set ff=unix\' -c \'x\'' % (user_dir, sh_file))
     _execute_command(ssh, 'vi %s/%s -c \'set ff=unix\' -c \'x\'' % (user_dir, moab_file))
     _execute_command(ssh, 'bash %s/%s' % (user_dir, sh_file))
-    ssh.close()
+    return ssh
