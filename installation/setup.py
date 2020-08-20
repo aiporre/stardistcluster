@@ -23,8 +23,8 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="ai4ia.stardist",
-    packages=find_packages(),
+    name="ai4ia",
+    packages=['stardist_impl'],
     version="0.0.1",
     author="Constantin Pape, Christian Tischer",
     url="https://git.embl.de/grp-bio-it/ai4ia.git",

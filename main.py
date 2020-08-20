@@ -5,7 +5,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, IntegerField, BooleanField, FloatField
 from wtforms.validators import DataRequired, NumberRange, Email
 from flask_script import Manager
-from utils import get_configuration, save_configuration, create_files, load_files, execute_ssh_command
+from utils import get_configuration, save_configuration, create_files, load_files, execute_ssh_command, run_local
 import time
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'hard to guess string'
@@ -17,6 +17,7 @@ moment = Moment(app)
 
 class NameForm(FlaskForm):
     name = StringField('Give a name to a new setup or load your setup', validators=[DataRequired()])
+    local = BooleanField('Run Local', default=False)
     submit = SubmitField('Create/Load')
 
 class TrainingForm(FlaskForm):
@@ -76,6 +77,7 @@ def index():
         if session.get('name') is None:
             form.name.data = 'default'
         session['name'] = form.name.data
+        session['local'] = form.local.data
         return redirect(url_for('index'))
     return render_template('index.html', form=form, name=session.get('name'))
 
@@ -103,10 +105,13 @@ def training():
         config['2d']['twoDim'] = str(form.twoDim.data)
         config['training']['valFraction'] = str(form.valFraction.data)
         save_configuration(session.get('name'), config)
-        create_files(config, destination='training')
-        ssh = session.get('ssh') if 'ssh' in session.keys() else None
-        load_files(ssh, config, destination='training')
-        session['ssh'] = ssh
+        if session['local'] == True:
+            run_local(config, destination='training')
+        else:
+            create_files(config, destination='training')
+            ssh = session.get('ssh') if 'ssh' in session.keys() else None
+            load_files(ssh, config, destination='training')
+            session['ssh'] = ssh
         return redirect(url_for('training'))
     else:
         form.jobName.default = config['general']['jobName']
@@ -189,10 +194,13 @@ def prediction():
         config['2d']['multichannel'] = str(form.multichannel.data)
         config['2d']['twoDim'] = str(form.twoDim.data)
         save_configuration(session.get('name'), config)
-        create_files(config, destination='prediction')
-        ssh = session.get('ssh') if 'ssh' in session.keys() else None
-        load_files(ssh, config, destination='prediction')
-        session['ssh'] = ssh
+        if session['local'] == True:
+            run_local(config, destination='prediction')
+        else:
+            create_files(config, destination='prediction')
+            ssh = session.get('ssh') if 'ssh' in session.keys() else None
+            load_files(ssh, config, destination='prediction')
+            session['ssh'] = ssh
         return redirect(url_for('prediction'))
     else:
         form.jobName.default = config['general']['jobName']

@@ -20,3 +20,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
+
+from .train_stardist_2d import train_stardist_model as train2d
+from .train_stardist_3d import train_stardist_model as train3d
+from .predict_stardist_2d import predict_stardist as predict2d
+from .predict_stardist_3d import predict_stardist as predict3d

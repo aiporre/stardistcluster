@@ -1,3 +1,4 @@
+import json
 import os, configparser
 from shutil import copyfile
 from templates.templates import sh_template, moab_template
@@ -19,6 +20,64 @@ def save_configuration(name, config):
         pass
     with open('temp/%s.conf' % name, 'w') as configfile:
         config.write(configfile)
+
+def run_local(config, destination='training'):
+    from stardist_impl import train2d, train3d, predict2d, predict3d
+    if destination == 'training':
+        inputDir = config['training']['inputDir']
+        modelDir = config['general']['modelDir']
+        modelName = config['training']['modelName']
+        twoDim = config['2d']['twoDim']
+        patchSizeH = int(config['training']['patchSizeH'])
+        patchSizeW = int(config['training']['patchSizeW'])
+        patchSizeD = int(config['training']['patchSizeD'])
+        valFraction = config['training']['valFraction']
+        extension = config['general']['extension']
+        saveForFiji = config['2d']['saveForFiji']
+        multichannel = config['2d']['multichannel']
+
+        twoDim = twoDim == 'True'
+        multichannel = multichannel == 'True'
+        saveForFiji = saveForFiji == 'True'
+        model_path = os.path.join(modelDir, modelName)
+
+        if twoDim:
+            train2d(inputDir,
+                     model_path,
+                     "images",
+                     "labels",
+                     extension,
+                     valFraction,
+                     tuple([int(patchSizeW), int(patchSizeH)]),
+                     multichannel,
+                     saveForFiji)
+        else:
+            train3d(inputDir,
+                     model_path,
+                     "images",
+                     "labels",
+                     extension,
+                     valFraction,
+                     tuple([int(patchSizeD), int(patchSizeW), int(patchSizeH)]),
+                     anisotropy=None)
+    else:
+        inputDir = config['prediction']['inputDir']
+        modelDir = config['general']['modelDir']
+        modelName = config['training']['modelName']
+        twoDim = config['2d']['twoDim']
+        extension = config['general']['extension']
+        multichannel = config['2d']['multichannel']
+        outputDir = config['prediction']['outputDir']
+        memory_usage = int(config['prediction']['memoryUsage'])
+
+        twoDim = twoDim == 'True'
+        multichannel = multichannel == 'True'
+        model_path = os.path.join(modelDir, modelName)
+        if twoDim == 'True':
+            predict2d(model_path, inputDir, outputDir, extension, multichannel, memory_usage)
+        else:
+            predict3d(model_path, inputDir, outputDir, extension, memory_usage)
+
 def create_files(config, destination='training'):
     moab_file = "config_%s_%s.moab" % (config['general']['jobName'], destination)
     sh_file = 'starjob_%s_%s.sh' % (config['general']['jobName'], destination)
