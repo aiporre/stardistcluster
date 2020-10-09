@@ -168,7 +168,7 @@ def outputs():
 @app.route('/jobs', methods=['GET'])
 def jobs():
     ssh = session.get('ssh') if 'ssh' in session.keys() else None
-    lines = execute_ssh_command(ssh, 'showq')
+    lines = execute_ssh_command(ssh, 'squeue')
     session['ssh'] = ssh
     return render_template('jobs.html', lines=lines.split('\n'))
 

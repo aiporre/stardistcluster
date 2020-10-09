@@ -1,7 +1,7 @@
 import json
 import os, configparser
 from shutil import copyfile
-from templates.templates import sh_template, moab_template
+from templates.templates import sh_template, slurm_template
 from paramiko import SSHClient
 from cryptography.fernet import Fernet
 from scp import SCPClient
@@ -79,12 +79,12 @@ def run_local(config, destination='training'):
             predict3d(model_path, inputDir, outputDir, extension, memory_usage)
 
 def create_files(config, destination='training'):
-    moab_file = "config_%s_%s.moab" % (config['general']['jobName'], destination)
+    slurm_file = "config_%s_%s.slurm" % (config['general']['jobName'], destination)
     sh_file = 'starjob_%s_%s.sh' % (config['general']['jobName'], destination)
 
-    sh_file_content = sh_template(config['general']['user'], moab_file)
+    sh_file_content = sh_template(config['general']['user'], slurm_file)
     if destination == 'training':
-        moab_file_content = moab_template(jobName=config['general']['jobName'],
+        slurm_file_content = slurm_template(jobName=config['general']['jobName'],
                                           numberOfNodes=config['general']['numberOfNodes'],
                                           wallTime=config['general']['wallTime'],
                                           memory=config['general']['memory'],
@@ -105,7 +105,7 @@ def create_files(config, destination='training'):
                                           multichannel = config['2d']['multichannel'])
 
     else:
-        moab_file_content = moab_template(jobName=config['general']['jobName'],
+        slurm_file_content = slurm_template(jobName=config['general']['jobName'],
                                           numberOfNodes=config['general']['numberOfNodes'],
                                           wallTime=config['general']['wallTime'],
                                           memory=config['general']['memory'],
@@ -122,8 +122,8 @@ def create_files(config, destination='training'):
                                           outputDir=config['prediction']['outputDir'],
                                           memory_usage=config['prediction']['memoryUsage'])
 
-    with open('temp/%s' % moab_file, 'w') as f:
-        f.write(moab_file_content)
+    with open('temp/%s' % slurm_file, 'w') as f:
+        f.write(slurm_file_content)
 
     with open('temp/%s' % sh_file, 'w') as f:
         f.write(sh_file_content)
@@ -171,12 +171,12 @@ def load_files(ssh, config, destination='training'):
 
     # create dir USER at fixed directory $HOME/stardist/
     user_dir = '~/stardist/%s' % config['general']['user']
-    ssh.exec_command('mkdir -p %s' % user_dir)
+    ssh.exec_command('mkdir %s' % user_dir)
     print('Creating directory ', user_dir)
-    # copy moab generated {jobName}_training.moab to $HOME/stardist/$USER
-    moab_file = 'config_%s_%s.moab' % (config['general']['jobName'], destination)
-    scp.put('temp/%s' % moab_file, remote_path= user_dir)
-    print('moving moab_file', moab_file, 'to ', user_dir)
+    # copy slurm generated {jobName}_training.slurm to $HOME/stardist/$USER
+    slurm_file = 'config_%s_%s.slurm' % (config['general']['jobName'], destination)
+    scp.put('temp/%s' % slurm_file, remote_path= user_dir)
+    print('moving slurm_file', slurm_file, 'to ', user_dir)
     # copy sh generated {jobName}_training.sh to $HOME/stardist/$USER
     sh_file = 'starjob_%s_%s.sh' % (config['general']['jobName'], destination)
     scp.put('temp/%s' % sh_file, remote_path= user_dir )
@@ -184,6 +184,6 @@ def load_files(ssh, config, destination='training'):
     scp.close()
     # execute job in the cluster i.e submit the jobs
     _execute_command(ssh, 'vi %s/%s -c \'set ff=unix\' -c \'x\'' % (user_dir, sh_file))
-    _execute_command(ssh, 'vi %s/%s -c \'set ff=unix\' -c \'x\'' % (user_dir, moab_file))
+    _execute_command(ssh, 'vi %s/%s -c \'set ff=unix\' -c \'x\'' % (user_dir, slurm_file))
     _execute_command(ssh, 'bash %s/%s' % (user_dir, sh_file))
     return ssh
