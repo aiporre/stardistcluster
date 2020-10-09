@@ -23,7 +23,6 @@ class NameForm(FlaskForm):
 class TrainingForm(FlaskForm):
     jobName = StringField('Job Name', validators=[DataRequired()])
     user = StringField('User Name', validators=[DataRequired()])
-    numberOfNodes = StringField('Number of Nodes', validators=[DataRequired()])
     wallTime = StringField('Wall time (format HH:MM)', validators=[DataRequired()])
     memory = StringField('Max Memory in mb', validators=[DataRequired()])
     email = StringField('Feedback email', validators=[DataRequired(), Email()])
@@ -44,7 +43,7 @@ class TrainingForm(FlaskForm):
 class PredictionForm(FlaskForm):
     jobName = StringField('Job Name', validators=[DataRequired()])
     user = StringField('User Name', validators=[DataRequired()])
-    numberOfNodes = StringField('Number of Nodes', validators=[DataRequired()])
+    manyImgPerNode = BooleanField('Many images per node')
     wallTime = StringField('Wall time (format HH:MM)', validators=[DataRequired()])
     memory = StringField('Max Memory in mb', validators=[DataRequired()])
     memoryUsage = IntegerField('Memory usage %', validators=[DataRequired(), NumberRange(min=0, max=100)])
@@ -88,7 +87,6 @@ def training():
     if form.validate_on_submit():
         config['general']['jobName'] = form.jobName.data
         config['general']['user'] = form.user.data
-        config['general']['numberOfNodes'] = form.numberOfNodes.data
         config['general']['wallTime'] = form.wallTime.data
         config['general']['memory'] = form.memory.data
         config['general']['email'] = form.email.data
@@ -116,7 +114,6 @@ def training():
     else:
         form.jobName.default = config['general']['jobName']
         form.user.default = config['general']['user']
-        form.numberOfNodes.default = config['general']['numberOfNodes']
         form.wallTime.default = config['general']['wallTime']
         form.memory.default = config['general']['memory']
         form.email.default = config['general']['email']
@@ -168,7 +165,7 @@ def outputs():
 @app.route('/jobs', methods=['GET'])
 def jobs():
     ssh = session.get('ssh') if 'ssh' in session.keys() else None
-    lines = execute_ssh_command(ssh, 'squeue')
+    lines = execute_ssh_command(ssh, 'squeue --all')
     session['ssh'] = ssh
     return render_template('jobs.html', lines=lines.split('\n'))
 
@@ -180,7 +177,7 @@ def prediction():
     if form.validate_on_submit():
         config['general']['jobName'] = form.jobName.data
         config['general']['user'] = form.user.data
-        config['general']['numberOfNodes'] = form.numberOfNodes.data
+        config['general']['manyImgPerNode'] = str(form.manyImgPerNode.data)
         config['general']['wallTime'] = form.wallTime.data
         config['general']['memory'] = form.memory.data
         config['prediction']['memoryUsage'] = str(form.memoryUsage.data)
@@ -205,7 +202,7 @@ def prediction():
     else:
         form.jobName.default = config['general']['jobName']
         form.user.default = config['general']['user']
-        form.numberOfNodes.default = config['general']['numberOfNodes']
+        form.manyImgPerNode.default = config['general']['manyImgPerNode'] == 'True'
         form.wallTime.default = config['general']['wallTime']
         form.memory.default = config['general']['memory']
         form.memoryUsage.default = config['prediction']['memoryUsage']

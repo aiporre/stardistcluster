@@ -81,11 +81,13 @@ def run_local(config, destination='training'):
 def create_files(config, destination='training'):
     slurm_file = "config_%s_%s.slurm" % (config['general']['jobName'], destination)
     sh_file = 'starjob_%s_%s.sh' % (config['general']['jobName'], destination)
-
-    sh_file_content = sh_template(config['general']['user'], slurm_file)
+    if destination == 'prediction' and config['general']['manyImgPerNode'] == 'False':
+        # ssh content create one image per node, therefore iterate over the images in input dir
+        sh_file_content = sh_template(config['general']['user'], slurm_file, iterImages=config['prediction']['inputDir'])
+    else:
+        sh_file_content = sh_template(config['general']['user'], slurm_file)
     if destination == 'training':
         slurm_file_content = slurm_template(jobName=config['general']['jobName'],
-                                          numberOfNodes=config['general']['numberOfNodes'],
                                           wallTime=config['general']['wallTime'],
                                           memory=config['general']['memory'],
                                           email=config['general']['email'],
@@ -105,13 +107,20 @@ def create_files(config, destination='training'):
                                           multichannel = config['2d']['multichannel'])
 
     else:
+        if config['general']['manyImgPerNode'] == 'True':
+            inputDir = config['prediction']['inputDir']
+            perImage = False
+        else:
+            inputDir = "${1}"
+            perImage = True
+
         slurm_file_content = slurm_template(jobName=config['general']['jobName'],
-                                          numberOfNodes=config['general']['numberOfNodes'],
+                                          perImage= perImage,
                                           wallTime=config['general']['wallTime'],
                                           memory=config['general']['memory'],
                                           email=config['general']['email'],
                                           destination=destination,
-                                          inputDir=config['prediction']['inputDir'],
+                                          inputDir=inputDir,
                                           modelName=config['prediction']['modelName'],
                                           user=config['general']['user'],
                                           modelDir=config['general']['modelDir'],
