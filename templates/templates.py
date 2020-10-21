@@ -1,5 +1,5 @@
-def moab_template(jobName=None,
-                  numberOfNodes=None,
+def slurm_template(jobName=None,
+                  perImage=None,
                   wallTime=None,
                   memory=None,
                   email=None,
@@ -48,34 +48,38 @@ def moab_template(jobName=None,
         script_string += ' --save-for-fiji'
     if destination == "prediction" and memory_usage is not None and not memory_usage == "100":
         script_string += f' -r {memory_usage}'
+    if destination == "prediction" and perImage:
+        second_input = "${2}"
+        script_string += f' > ./{user}/batch_{user}_{jobName}_{second_input}.out 2>&1'
+    else:
+        script_string += f' > ./{user}/batch_{user}_{jobName}.out 2>&1'
 
-    script_string += f' > ./{user}/batch_{user}_{jobName}.out 2>&1'
 
-    moab_file_content = "#!/bin/sh\n" \
-                        "########## Begin MOAB/Slurm header ##########\n" \
-                        f"#MSUB -N {jobName}\n" \
+    # decide which partition based on the node type
+    partition="single"
+    if "gpu" in nodeType:
+        partition = "gpu-" + partition
+    slurm_file_content = "#!/bin/sh\n" \
+                        "########## Begin SLURM header ##########\n" \
+                        f"#SBATCH --job-name=\"{jobName}\"\n" \
                         "#\n" \
                         "# Request number of nodes and CPU cores per node for job\n" \
-                        f"#MSUB -l nodes={numberOfNodes}:ppn=16:{nodeType}\n" \
+                        f"#SBATCH --partition={partition}\n" \
+                        f"#SBATCH --nodes=1\n" \
+                        f"#SBATCH --ntasks-per-node=16\n" \
                         "# Estimated wallclock time for job\n" \
-                        f"#MSUB -l walltime={wallTime}\n" \
+                        f"#SBATCH --time={wallTime}\n" \
                         "# Memory per processor:\n" \
                         "#\n" \
-                        f"#MSUB -l mem={memory}mb\n" \
+                        f"#SBATCH --mem={memory}mb\n" \
                         "# Specify a queue class\n" \
                         "# Write standard output and errors in same file\n" \
-                        "#MSUB -j oe\n" \
+                        f"#SBATCH -o stardist/{user}/slurm_%j_{user}_{jobName}.log\n" \
+                        f"#SBATCH -e stardist/{user}/slurm_%j_{user}_{jobName}.err\n" \
                         "# Send mail when job begins, aborts and ends\n" \
-                        "#MSUB -m bae\n" \
-                        f"#MSUB -M {email} \n" \
-                        "########### End MOAB header ##########\n" \
-                        "echo 'Submit Directory:                     $MOAB_SUBMITDIR' \n" \
-                        "echo 'Working Directory:                    $PWD'\n" \
-                        "echo 'Running on host                       $HOSTNAME'\n" \
-                        "echo 'Job id:                               $MOAB_JOBID'\n" \
-                        "echo 'Job name:                             $MOAB_JOBNAME'\n" \
-                        "echo 'Number of nodes allocated to job:     $MOAB_NODECOUNT'\n" \
-                        "echo 'Number of cores allocated to job:     $MOAB_PROCCOUNT'\n" \
+                        "#SBATCH --mail-type=ALL\n" \
+                        f"#SBATCH --mail-user={email} \n" \
+                        "########### End SLURM header ##########\n" \
                         "#start python script\n" \
                         "cd $HOME/stardist/ \n" \
                         f"export USER={user} \n" \
@@ -84,12 +88,33 @@ def moab_template(jobName=None,
                         f"{script_string}\n" \
                         "exit\n"
 
-    return moab_file_content
+    return slurm_file_content
 
 
-def sh_template(user, moab_file):
-    sh_file_content = "#!/bin/sh\n" \
-                      f"export USER={user} \n" \
-                      f"msub $HOME/stardist/{user}/{moab_file}\n" \
-                      "echo Done"
+def sh_template(user, slurm_file, iterImages=None):
+    if iterImages is None:
+        sh_file_content = "#!/bin/sh\n" \
+                          f"export USER={user} \n" \
+                          f"sbatch  $HOME/stardist/{user}/{slurm_file}\n" \
+                          "echo Done"
+    else:
+        sh_file_content = "#!/bin/sh\n" \
+                          f"FILES={iterImages}/* \n" \
+                          f"export USER={user} \n" \
+                          "for f in $FILES\n" \
+                          "do\n" \
+                          "  n=\"$(basename -- $f)\"\n" \
+                          "  m=\"$(echo \"$n\" | cut -f 1 -d '.')\"\n" \
+                          "  echo \"processing $m file ...\"\n" \
+                          f"  sbatch  $HOME/stardist/{user}/{slurm_file} $f $m\n" \
+                          "done\n" \
+                          "echo Done"
     return sh_file_content
+
+# FILES=/path/to/*
+# for f in $FILES
+# do
+#   echo "Processing $f file..."
+#   # take action on each file. $f store current file name
+#   cat $f
+# done
