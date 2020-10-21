@@ -223,7 +223,7 @@ def main():
         anisotropy = json.loads(anisotropy)
     model_path = os.path.join(args.models_dir, args.model_name)
 
-    train_stardist_model(args.root, model_path,
+    train_stardist_model(args.input_dir, model_path,
                          args.image_folder, args.labels_folder,
                          args.ext, args.validation_fraction,
                          tuple(args.patch_size), anisotropy)
