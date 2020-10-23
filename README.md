@@ -1,5 +1,4 @@
-################################################################################################
-INSTALLATION gudie for StarDist Cluster
+## INSTALLATION gudie for StarDist Cluster
 
 1. Github repository:
 
@@ -9,11 +8,10 @@ INSTALLATION gudie for StarDist Cluster
 
 	https://docs.anaconda.com/anaconda/install/
 
-3. Open anaconda promp
+3. Open the anaconda promp in Windows or the Linux terminal
 
 4. Navigate to the installation folder
 
-	F:
 	cd <path to installation>
 
 5. Run the commands:
@@ -24,13 +22,13 @@ INSTALLATION gudie for StarDist Cluster
 	conda activate stardist-gpu
 	pip install .
 
-	[CPU]
+	[cpu]
 	conda init
 	conda env create -f environment_cpu.yaml
 	conda activate stardist-cpu
 	pip install .
 	
-5.1 Install Visual if necesary (desktop dev with C++)
+5.1 Install Visual Studio if necesary (desktop dev with C++)
 
 	https://visualstudio.microsoft.com/downloads/
 	(to remove conda environment, if already created)
@@ -38,7 +36,7 @@ INSTALLATION gudie for StarDist Cluster
 
 5.2 if you want to run stardist cluster locally install:
 
-	pip install csbdeep stardist tensorflow	
+	pip install csbdeep stardist tensorflow-[cpu or gpu]
 
 6. run server:
 
@@ -61,7 +59,7 @@ INSTALLATION gudie for StarDist Cluster
 
 		Num GPUs Available: X
 
-Importatnt: There is a potential bug in the installation of TF-GPU (TD: check conda channel).
+Important: There is a potential bug in the installation of TF-GPU (TD: check conda channel).
 If it is not ruinning on GPU do the following:
 
 	pip uninstall tensorflow
@@ -78,10 +76,10 @@ and
 
 	conda install tensorflow-gpu==1.14
 
-################################################################################################
-RUN in the anaconda prompt:
 
-1. Open the conda prompt or the linux terminal and type
+## RUN StarDist in the anaconda prompt:
+
+1. Open the conda prompt in Windows or the Linux terminal and type
 
 	conda env list
 
