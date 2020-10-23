@@ -1,4 +1,4 @@
-## INSTALLATION gudie for StarDist Cluster
+## INSTALLATION guide for StarDist Cluster
 
 1. Github repository:
 
@@ -8,7 +8,7 @@
 
 	https://docs.anaconda.com/anaconda/install/
 
-3. Open the anaconda promp in Windows or the Linux terminal
+3. Open the anaconda prompt in Windows or the Linux terminal
 
 4. Navigate to the installation folder
 
@@ -16,19 +16,25 @@
 
 5. Run the commands:
 
-	[gpu]
-	conda init
-	conda env create -f environment_gpu.yaml
-	conda activate stardist-gpu
-	pip install .
+	GPU
+		conda init
 
-	[cpu]
-	conda init
-	conda env create -f environment_cpu.yaml
-	conda activate stardist-cpu
-	pip install .
+		conda env create -f environment_gpu.yaml
+
+		conda activate stardist-gpu
+
+		pip install .
+
+	CPU
+		conda init
+
+		conda env create -f environment_cpu.yaml
+
+		conda activate stardist-cpu
+
+		pip install .
 	
-5.1 Install Visual Studio if necesary (desktop dev with C++)
+5.1 Install Visual Studio if necessary (desktop dev with C++)
 
 	https://visualstudio.microsoft.com/downloads/
 	(to remove conda environment, if already created)
@@ -41,18 +47,23 @@
 6. run server:
 
 	cd ..
+
 	copy keys into stardistcluster folder
+
 	pip install flask_bootstrap flask_moment flask_wtf flask_script scp email_validator
 
 	python main.py runserver
+
 	open in your favorite browser: http://127.0.0.1:5000/
 
-	This solve the problem with DLL load failed
+	This solve the problem with DLL load failed:
+
 	conda update --all 
 
 7. Test TF-GPU installation by running:
 
 	import tensorflow as tf
+	
 	print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
 
 	Output:
@@ -60,7 +71,7 @@
 		Num GPUs Available: X
 
 Important: There is a potential bug in the installation of TF-GPU (TD: check conda channel).
-If it is not ruinning on GPU do the following:
+If it is not running on GPU do the following:
 
 	pip uninstall tensorflow
 
