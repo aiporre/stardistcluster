@@ -111,23 +111,25 @@
 3. Only if you run local on Ubuntu OS. Solve tensorflow GPU out of memory error
    TD: Apply the same solution used for the n2v in python. This will solve the problem in Ubuntu and Windows 10
 
-	export TF_FORCE_GPU_ALLOW_GROWTH=true
+	```sh
+	$ export TF_FORCE_GPU_ALLOW_GROWTH=true
+	```
 
 OPTION 1
+
 4. Run the server
 
-	4a. Run the server
-	
-		python main.py runserver
+	Run the server
+	```sh
+		$ python main.py runserver
+	```
 
-	5a. Open the server in your favorite browser
+	Open the server in your favorite browser http://127.0.0.1:5000/
 	
-		open in browser http://127.0.0.1:5000/
 
 OPTION 2
 
-4. Navigate to stardistcluster stardist_impl folder 
-
+5. Navigate to stardistcluster stardist_impl folder 
 
 	```sh
 	$ python train_stardist_3d.py -i "C:\Users\Carlo Beretta\Desktop\test" --image-folder raw --labels-folder label -m modelTest -n "C:\Users\Carlo Beretta\Desktop\test" --patch_size 24 96 96
