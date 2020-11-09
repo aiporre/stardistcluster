@@ -119,9 +119,8 @@ OPTION 1
 
 4. Run the server
 
-	Run the server
 	```sh
-		$ python main.py runserver
+	$ python main.py runserver
 	```
 
 	Open the server in your favorite browser http://127.0.0.1:5000/
