@@ -1,9 +1,8 @@
 ## INSTALLATION guide for StarDist Cluster
-
 1. Github repository:
-
-	git clone https://github.com/aiporre/stardistcluster
-
+    ```sh
+	$ git clone https://github.com/aiporre/stardistcluster
+    ```
 2. Download anaconda:
 
 	https://docs.anaconda.com/anaconda/install/
@@ -12,114 +11,127 @@
 
 4. Navigate to the installation folder
 
-	cd <path to installation>
+	`cd path to installation`
+
 
 5. Run the commands:
 
 	GPU
-		conda init
 
-		conda env create -f environment_gpu.yaml
+	```sh
+    $ conda init
 
-		conda activate stardist-gpu
+	$ conda env create -f environment_gpu.yaml
 
-		pip install .
+	$ conda activate stardist-gpu
+
+	$ pip install .
+	```
 
 	CPU
-		conda init
+	```sh
+	$ conda init
 
-		conda env create -f environment_cpu.yaml
+	$ conda env create -f environment_cpu.yaml
 
-		conda activate stardist-cpu
+	$ conda activate stardist-cpu
 
-		pip install .
-	
-5.1 Install Visual Studio if necessary (desktop dev with C++)
+	$ pip install .
+	```
+6.
+	a. Install Visual Studio if necessary (desktop dev with C++)
 
 	https://visualstudio.microsoft.com/downloads/
-	(to remove conda environment, if already created)
-	conda remove -n stardist-[cpu or gpu] --all
+	
+	b. Remove conda environment, if already created
+	```sh
+	$ conda remove -n stardist-[cpu or gpu] --all
+	```
 
-5.2 if you want to run stardist cluster locally install:
+	c. Run stardist cluster locally install:
+	```sh
+	$ pip install csbdeep stardist tensorflow-[cpu or gpu]
+	```
 
-	pip install csbdeep stardist tensorflow-[cpu or gpu]
+7. Run server:
+	
+    `cd path to installation`
 
-6. run server:
+	Copy keys into stardistcluster folder
 
-	cd ..
+    ```sh
+    $ pip install flask_bootstrap flask_moment flask_wtf flask_script scp email_validator
+    $ python main.py runserver
+    ```
 
-	copy keys into stardistcluster folder
-
-	pip install flask_bootstrap flask_moment flask_wtf flask_script scp email_validator
-
-	python main.py runserver
-
-	open in your favorite browser: http://127.0.0.1:5000/
+	Open in your favorite browser: http://127.0.0.1:5000/
 
 	This solve the problem with DLL load failed:
 
-	conda update --all 
+    ```sh
+    $ conda update --all
+    ```
+8. Test TF-GPU installation by running:
+    ```sh
+    $ import tensorflow as tf
+    $ print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
+    ```
+	Num GPUs Available: X
 
-7. Test TF-GPU installation by running:
-
-	import tensorflow as tf
-	
-	print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
-
-	Output:
-
-		Num GPUs Available: X
-
-Important: There is a potential bug in the installation of TF-GPU (TD: check conda channel).
-If it is not running on GPU do the following:
-
-	pip uninstall tensorflow
-
-or 
-
-	pip uninstall tensorflow-gpu
-
-or
-
-	conda uninstall tensorflow-gpu==1.14
-
-and
-
-	conda install tensorflow-gpu==1.14
-
+	Important: There is a potential bug in the installation of TF-GPU (TD: check conda channel).
+	If it is not running on GPU do the following:
+    ```sh
+	$ pip uninstall tensorflow
+    ```
+	or 
+    ```sh
+	$ pip uninstall tensorflow-gpu
+    ```
+	or
+    ```sh
+	$ conda uninstall tensorflow-gpu==1.14
+    ```
+	and
+    ```sh
+	$ conda install tensorflow-gpu==1.14
+    ```
 
 ## RUN StarDist in the anaconda prompt:
 
 1. Open the conda prompt in Windows or the Linux terminal and type
 
-	conda env list
-
+    ```sh
+    $ conda env list
+    ```
 2. Activate the conda env
-	
-	conda activate stardist-[cpu or gpu]
 
+    ```sh
+    $ conda activate stardist-[cpu or gpu]
+    ```
 3. Only if you run local on Ubuntu OS. Solve tensorflow GPU out of memory error
    TD: Apply the same solution used for the n2v in python. This will solve the problem in Ubuntu and Windows 10
 
-	export TF_FORCE_GPU_ALLOW_GROWTH=true
+    ```sh
+    $ export TF_FORCE_GPU_ALLOW_GROWTH=true
+    ```
 
 OPTION 1
 
-	4a. Run the server
-	
-		python main.py runserver
+4. Run the server
 
-	5a. Open the server in your favorite browser
-	
-		open in browser http://127.0.0.1:5000/
+    ```sh
+    $ python main.py runserver
+    ```
+5. Open the server in your favorite browser http://127.0.0.1:5000/
 
 OPTION 2
 
-	4b. Navigate to stardistcluster stardist_impl folder 
-		
-		C:\[PATH_TO_STARDISTCLUSTER]\installation\stardist_impl>
+4. Navigate to stardistcluster stardist_impl folder 
 
+	`C:\[PATH_TO_STARDISTCLUSTER]\installation\stardist_impl`
+	
+5. Adjust the paths and the patch_size and run the python script
 
-	5b. Adjust the paths and the patch_size and run the python script
-
-		python train_stardist_3d.py -i "C:\Users\Carlo Beretta\Desktop\test" --image-folder raw --labels-folder label -m modelTest -n "C:\Users\Carlo Beretta\Desktop\test" --patch_size 24 96 96
+	```sh
+	$ python train_stardist_3d.py -i "C:\Users\Carlo Beretta\Desktop\test" --image-folder raw --labels-folder label -m modelTest -n "C:\Users\Carlo Beretta\Desktop\test" --patch_size 24 96 96
+	```
