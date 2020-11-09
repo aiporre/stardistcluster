@@ -1,11 +1,11 @@
 ## INSTALLATION guide for StarDist Cluster
-1. Github repository:
+1. Clone the Github repository
 
     ```sh
 	$ git clone https://github.com/aiporre/stardistcluster
     ```
 
-2. Download anaconda:
+2. Download anaconda
 
 	https://docs.anaconda.com/anaconda/install/
 
@@ -15,9 +15,9 @@
 
 	`cd path to installation`
 
-5. Run the commands:
+5. Run the commands
 
-	GPU
+	[GPU]
 
 	```sh
     $ conda init
@@ -29,7 +29,7 @@
 	$ pip install .
 	```
 
-	CPU
+	[CPU]
 	```sh
 	$ conda init
 
@@ -40,16 +40,18 @@
 	$ pip install .
 	```
 
-6. Install Visual Studio if necessary (desktop dev with C++)
+6. Install StarDist Cluster on your local machine 
+
+	a. Install Visual Studio if necessary (desktop dev with C++)
 
 	https://visualstudio.microsoft.com/downloads/
 	
-	a. Remove conda environment, if already created
+	b. Remove conda environment, if already created
 	```sh
 	$ conda remove -n stardist-[cpu or gpu] --all
 	```
 
-	b. Install stardist cluster locally
+	c. Install stardist cluster locally
 	```sh
 	$ pip install csbdeep stardist tensorflow-[cpu or gpu]
 	```
@@ -58,16 +60,17 @@
 	
     `cd path to installation`
 
-	Copy keys into stardistcluster folder
+	Copy keys into stardist folder [to access to the BWCLUSTER Heidelberg University] and run the server
 
     ```sh
     $ pip install flask_bootstrap flask_moment flask_wtf flask_script scp email_validator
+	
     $ python main.py runserver
     ```
 
-	Open in your favorite browser: http://127.0.0.1:5000/
+	Open the server in your favorite browser: http://127.0.0.1:5000/
 
-	To solve the problem with DLL load failed:
+	To solve the problem with DLL load failed run
 
     ```sh
     $ conda update --all
@@ -77,11 +80,11 @@
     ```sh
     $ import tensorflow as tf
     $ print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
+	
 	$ Num GPUs Available: X
     ```
 
-	Important: There is a potential bug in the installation of TF-GPU (TD: check conda channel).
-	If it is not running on GPU do the following:
+	Important: if it is not running on GPU do the following
     ```sh
 	$ pip uninstall tensorflow
     ```
@@ -98,7 +101,7 @@
 	$ conda install tensorflow-gpu==1.14
     ```
 
-## RUN StarDist in the anaconda prompt:
+## RUN StarDist Cluster in the anaconda prompt:
 
 1. Open the conda prompt in Windows or the Linux terminal and type
 
@@ -110,7 +113,7 @@
     ```sh
     $ conda activate stardist-[cpu or gpu]
     ```
-3. Only if you run local on Ubuntu OS. Solve tensorflow GPU out of memory error
+3. Before you run stardist if you get tensorflow GPU out of memory error type
 
 	```sh
 	$ export TF_FORCE_GPU_ALLOW_GROWTH=true
@@ -124,12 +127,12 @@ OPTION 1
 	$ python main.py runserver
 	```
 
-	Open the server in your favorite browser http://127.0.0.1:5000/
+	Open the server in your favorite browser: http://127.0.0.1:5000/
 	
 
 OPTION 2
 
-5. Navigate to stardistcluster stardist_impl folder 
+5. Navigate to stardist_impl folder and type
 
 	```sh
 	$ python train_stardist_3d.py -i "C:\Users\Carlo Beretta\Desktop\test" --image-folder raw --labels-folder label -m modelTest -n "C:\Users\Carlo Beretta\Desktop\test" --patch_size 24 96 96
