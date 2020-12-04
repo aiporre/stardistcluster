@@ -1,139 +1,192 @@
-## INSTALLATION guide for StarDist Cluster
-1. Clone the Github repository
+## Installation Guide for Stardist-Cluster
 
-    ```sh
-	$ git clone https://github.com/aiporre/stardistcluster
-    ```
+<!--Windows 10 CUDA 10.0-->
 
-2. Download anaconda
 
-	https://docs.anaconda.com/anaconda/install/
 
-3. Open the anaconda prompt in Windows or the terminal in Linux
+1. Clone the *GitHub* repository
+
+  `$ git clone https://github.com/aiporre/stardistcluster`
+
+  
+
+2. Download *anaconda* if not yet installed and follow the installation instructions
+
+  https://docs.anaconda.com/anaconda/install/
+
+  
+
+3. Open the anaconda prompt
+
+   
 
 4. Navigate to the installation folder
 
-	`cd path to installation`
+  ```
+  $ F:
+  $ cd <path to installation>
+  ```
 
-5. Run the commands
+  
 
-	[GPU]
+5. Run the command:
 
-	```sh
-    $ conda init
+  ```
+  [gpu]
+  $ conda init
+  $ conda env create -f environment_gpu.yaml
+  $ conda activate stardist-gpu
+  $ pip install .
+  ```
 
-	$ conda env create -f environment_gpu.yaml
+  ```
+  [CPU]
+  $ conda init
+  $ conda env create -f environment_cpu.yaml
+  $ conda activate stardist-cpu
+  $ pip install .
+  ```
 
-	$ conda activate stardist-gpu
+  
 
-	$ pip install .
-	```
+  Install *Visual Studio* if not installed (desktop dev with C++)
 
-	[CPU]
-	```sh
-	$ conda init
+  https://visualstudio.microsoft.com/downloads/
 
-	$ conda env create -f environment_cpu.yaml
+  
 
-	$ conda activate stardist-cpu
+  **Important:** remove the conda environment, if already created
+  `$ conda remove -n stardist-[cpu or gpu] --all`
 
-	$ pip install .
-	```
+  
 
-6. Install StarDist Cluster on your local machine 
+  If you want to run stardist-cluster locally install
 
-	a. Install Visual Studio if necessary (desktop dev with C++)
+  `$ pip install csbdeep stardist tensorflow`
 
-	https://visualstudio.microsoft.com/downloads/
-	
-	b. Remove conda environment, if already created
-	```sh
-	$ conda remove -n stardist-[cpu or gpu] --all
-	```
+  
 
-	c. Install stardist cluster locally
-	```sh
-	$ pip install csbdeep stardist tensorflow-[cpu or gpu]
-	```
+6. Run the server:
 
-7. Run server:
-	
-    `cd path to installation`
+  Copy keys into stardist-cluster folder and run the following commands
 
-	Copy keys into stardist folder [to access to the BWCLUSTER Heidelberg University] and run the server
+  ```
+  $ pip install flask_bootstrap flask_moment flask_wtf flask_script scp email_validator
+  
+  $ python main.py runserver
+  ```
 
-    ```sh
-    $ pip install flask_bootstrap flask_moment flask_wtf flask_script scp email_validator
-	
-    $ python main.py runserver
-    ```
+  
 
-	Open the server in your favorite browser: http://127.0.0.1:5000/
+  Open in your favorite browser: http://127.0.0.1:5000/
 
-	To solve the problem with DLL load failed run
+  
 
-    ```sh
-    $ conda update --all
-    ```
+  **Important:** if DLL load fails, update the conda environment
 
-8. Test TF-GPU installation by running:
-    ```sh
-    $ import tensorflow as tf
-    $ print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
-	
-	$ Num GPUs Available: X
-    ```
+  `$ conda update --all `
 
-	Important: if it is not running on GPU do the following
-    ```sh
-	$ pip uninstall tensorflow
-    ```
-	or 
-    ```sh
-	$ pip uninstall tensorflow-gpu
-    ```
-	or
-    ```sh
-	$ conda uninstall tensorflow-gpu==1.14
-    ```
-	and
-    ```sh
-	$ conda install tensorflow-gpu==1.14
-    ```
+  
 
-## RUN StarDist Cluster in the anaconda prompt:
+7. Test TF-GPU installation by running:
 
-1. Open the conda prompt in Windows or the Linux terminal and type
+  `$ python`
 
-    ```sh
-    $ conda env list
-    ```
+  ```python
+import tensorflow as tf
+print(">> Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
+  ```
+
+  Output:
+
+  ```
+  >> Num GPUs Available: X
+  ```
+
+  
+
+  **Important:** There is a potential bug in the installation of tensorflow-gpu
+  If it is not running on GPU try the following
+
+  `$ pip uninstall tensorflow`
+
+  or 
+
+  `$ pip uninstall tensorflow-gpu`
+
+  or
+
+  `$ conda uninstall tensorflow-gpu==1.14`
+
+  and
+
+  `$ conda install tensorflow-gpu==1.14`
+
+
+
+## Run Stardist-Cluster in the Anaconda Prompt
+
+1. Open the conda prompt or the linux terminal and type
+
+  `$ conda env list`
+
+  
+
 2. Activate the conda env
 
-    ```sh
-    $ conda activate stardist-[cpu or gpu]
-    ```
-3. Before you run stardist if you get tensorflow GPU out of memory error type
+   `$ conda activate stardist-[cpu or gpu]`
 
-	```sh
-	$ export TF_FORCE_GPU_ALLOW_GROWTH=true
-	```
+   
 
-OPTION 1
+3. Only if you run local on Ubuntu OS. Solve tensorflow GPU out of memory error
+   TD: Apply the same solution used for the n2v in python. This will solve the problem in Ubuntu and Windows 10
 
-4. Run the server
+   ` $ export TF_FORCE_GPU_ALLOW_GROWTH=true`
 
-	```sh
-	$ python main.py runserver
-	```
+   
 
-	Open the server in your favorite browser: http://127.0.0.1:5000/
-	
+#### **<u>Training</u>**
 
-OPTION 2
+*<u>OPTION 1</u>*
 
-5. Navigate to stardist_impl folder and type
+Run the server
 
-	```sh
-	$ python train_stardist_3d.py -i "C:\Users\Carlo Beretta\Desktop\test" --image-folder raw --labels-folder label -m modelTest -n "C:\Users\Carlo Beretta\Desktop\test" --patch_size 24 96 96
-	```
+`$ python main.py runserver`
+
+
+
+Open the link in your favorite browser 
+
+http://127.0.0.1:5000/
+
+
+
+*<u>OPTION 2</u>*
+
+Navigate to stardist-cluster <<stardist_impl>> folder 
+
+`$ C:\[PATH_TO_STARDISTCLUSTER]\installation\stardist_impl`
+
+
+
+Adjust the path, the patch_size and run the python script `train_stardist_3d.py`
+
+**NB:** The input path to the images has to contain 2 subfolders, one with the raw images and the other one with the label images
+
+```
+$ python train_stardist_3d.py -i "[PATH_TO_IMAGE_FOLDER]" --image "[RAW_IMAGE_SUBFOLDER_NAME]" --labels "[LABEL_IMAGE_SUBFOLDER_NAME]" -n "[MODEL_PATH]" -m "[MODEL_NAME]" --patch_size 24 96 96
+```
+
+
+
+#### **<u>Prediction</u>**
+
+Adjust the path and run the python script `predict_stardist_3d.py`
+
+```
+$ predict_stardist_3d -i "[PATH_TO_THE_IMAGES]" -o "[PATH_TO_THE_OUTPUT]" -n "[MODEL_PATH]" -m "[MODEL_NAME]" -r 50
+```
+
+**NB:** `--r` is the number of blocks [100 = No blocks]
+
+**Tip:** Increase the number of blocks by reducing `--r` to process large data. However, increasing the number of blocks increase the computational time
